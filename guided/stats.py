@@ -1,15 +1,23 @@
 import numpy as np
 from scipy import stats
 
-def users_needed_per_arm(baseline, lift, alpha, power):
+def proportion_users_needed_per_arm(baseline_rate, lift, alpha, power):
     """Users needed in EACH group to detect an absolute change of `lift`
     with a two-sided two-proportion z-test."""
-    p1, p2 = baseline, baseline + lift
+    p1, p2 = baseline_rate, baseline_rate + lift
     p_bar = (p1 + p2) / 2
     z_alpha = stats.norm.ppf(1 - alpha / 2)
     z_power = stats.norm.ppf(power)
     top = (z_alpha * np.sqrt(2 * p_bar * (1 - p_bar)) + z_power * np.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
     return top / (p2 - p1) ** 2
+
+def continuous_users_needed_per_arm(baseline_std, lift, alpha, power):
+    """Users needed in EACH group to detect an absolute change of `lift`
+    in the mean of a continuous metric with a two-sided two-sample test.
+    `baseline_std` is the historical standard deviation of the metric."""
+    z_alpha = stats.norm.ppf(1 - alpha / 2)
+    z_power = stats.norm.ppf(power)
+    return 2 * baseline_std**2 * (z_alpha + z_power) ** 2 / lift**2
 
 def two_proportion_test(x_a, n_a, x_b, n_b, alpha=0.05):
     p_a, p_b = x_a / n_a, x_b / n_b
